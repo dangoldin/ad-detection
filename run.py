@@ -4,6 +4,8 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 
 from googleapiclient import discovery
+from googleapiclient import errors
+
 from oauth2client.client import GoogleCredentials
 
 from PIL import Image
@@ -13,8 +15,11 @@ import uuid
 import io
 import os
 import base64
+import json
 
 from conf import urls
+
+import pdb
 
 PAGE_LOAD_TIMEOUT_SECONDS = 30
 SLEEP_SECONDS = 5
@@ -23,6 +28,8 @@ WINDOW_HEIGHT = 800
 
 DISCOVERY_URL = 'https://{api}.googleapis.com/$discovery/rest?version={apiVersion}'  # noqa
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'credentials.json'
+
+OUT_DIR = 'out'
 
 class Crawler:
     def __init__(self):
@@ -36,7 +43,7 @@ class Crawler:
             discoveryServiceUrl=DISCOVERY_URL)
 
     def crawl(self):
-        imgs = []
+        img_ids = []
 
         time.sleep(SLEEP_SECONDS)
 
@@ -52,13 +59,16 @@ class Crawler:
             print 'Processing element', idx
             # print 'With HTML', el.get_attribute('innerHTML')
 
-            filename = 'screenshot-' + str(uuid.uuid4()) + '.jpg'
+            img_id = str(uuid.uuid4())
+
+            filename = 'screenshot-' + img_id + '.jpg'
+            filepath = os.path.join(OUT_DIR, filename)
 
             # From http://stackoverflow.com/questions/15018372/how-to-take-partial-screenshot-with-selenium-webdriver-in-python
             # and http://stackoverflow.com/questions/37882208/get-element-location-relative-to-viewport-with-selenium-python
             self.driver.execute_script("return arguments[0].scrollIntoView();", el)
             self.driver.execute_script("window.scrollBy(0, -150);")
-            self.driver.save_screenshot(filename)
+            self.driver.save_screenshot(filepath)
 
             scroll = self.driver.execute_script("return window.scrollY;")
             location = el.location
@@ -67,7 +77,7 @@ class Crawler:
             if size['height'] == 0 or size['width'] == 0:
                 continue
 
-            im = Image.open(filename)
+            im = Image.open(filepath)
 
             left = location['x']
             top = location['y'] - scroll
@@ -79,13 +89,15 @@ class Crawler:
             print 'Location', location
 
             im = im.crop((left, top, right, bottom))
-            im.save(filename.replace('.jpg', '-2.jpg'))
+            im.save(filepath.replace('.jpg', '-2.jpg'))
 
-            imgs.append(filename)
+            img_ids.append(img_id)
+
+            # pdb.set_trace()
 
         self.driver.quit()
 
-        return imgs
+        return img_ids
 
     # From https://github.com/GoogleCloudPlatform/cloud-vision/blob/master/python/text/textindex.py
     def detect_text(self, input_filenames, num_retries=3, max_results=6):
@@ -125,7 +137,11 @@ class Crawler:
                             else ''))
                     continue
                 if 'textAnnotations' in response:
-                    text_response[filename] = response['textAnnotations']
+                    textAnnotations = response['textAnnotations']
+                    text_response[filename] = textAnnotations
+
+                    with open(filename + '.txt', 'w') as f:
+                        f.write(json.dumps(textAnnotations, indent=2))
                 else:
                     text_response[filename] = []
             return text_response
@@ -134,8 +150,7 @@ class Crawler:
         except KeyError as e2:
             print("Key error: %s" % e2)
 
-
 if __name__ == '__main__':
     c = Crawler()
-    imgs = c.crawl()
-    print c.detect_text(imgs)
+    img_ids = c.crawl()
+    print c.detect_text([os.path.join(OUT_DIR, 'screenshot-' + img_id + '-2.jpg') for img_id in img_ids])

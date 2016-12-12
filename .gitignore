@@ -90,3 +90,6 @@ ENV/
 
 # Private
 credentials.json
+
+# OSX
+.DS_Store
