@@ -57,7 +57,6 @@ class Crawler:
 
         for idx, el in enumerate(els):
             print 'Processing element', idx
-            # print 'With HTML', el.get_attribute('innerHTML')
 
             img_id = str(uuid.uuid4())
 
@@ -101,8 +100,6 @@ class Crawler:
 
     # From https://github.com/GoogleCloudPlatform/cloud-vision/blob/master/python/text/textindex.py
     def detect_text(self, input_filenames, num_retries=3, max_results=6):
-        """Uses the Vision API to detect text in the given file.
-        """
         images = {}
         for filename in input_filenames:
             with open(filename, 'rb') as image_file:
