@@ -147,6 +147,18 @@ class Crawler:
         except KeyError as e2:
             print("Key error: %s" % e2)
 
+    def identify_company(self, input_filenames):
+        annotation_info = {}
+        for filename in input_filenames:
+            with open(filename, 'r') as f:
+                annotation_info[filename] = json.loads(f.read())
+
+        for filename in input_filenames:
+            text = annotation_info[filename][0]['description']
+
+            # TODO: actually figure out how to go from text to company name
+
+
 if __name__ == '__main__':
     c = Crawler()
     img_ids = c.crawl()
