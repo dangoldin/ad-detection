@@ -135,12 +135,11 @@ class Crawler:
                     continue
                 if 'textAnnotations' in response:
                     textAnnotations = response['textAnnotations']
-                    text_response[filename] = textAnnotations
-
-                    with open(filename + '.txt', 'w') as f:
-                        f.write(json.dumps(textAnnotations, indent=2))
                 else:
-                    text_response[filename] = []
+                    textAnnotations = []
+                text_response[filename] = textAnnotations
+                with open(filename + '.txt', 'w') as f:
+                    f.write(json.dumps(textAnnotations, indent=2))
             return text_response
         except errors.HttpError as e:
             print("Http Error for %s: %s" % (filename, e))
