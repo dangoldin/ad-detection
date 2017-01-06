@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 from selenium import webdriver
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 
 from googleapiclient import discovery
@@ -9,6 +10,8 @@ from googleapiclient import errors
 from oauth2client.client import GoogleCredentials
 
 from PIL import Image
+
+import requests
 
 import time
 import uuid
@@ -33,7 +36,7 @@ OUT_DIR = 'out'
 
 class Crawler:
     def __init__(self):
-        self.driver = webdriver.Firefox()
+        self.driver = webdriver.Chrome()
         self.driver.set_page_load_timeout(PAGE_LOAD_TIMEOUT_SECONDS)
         self.driver.set_window_size(WINDOW_WIDTH, WINDOW_HEIGHT)
 
@@ -75,6 +78,25 @@ class Crawler:
 
             if size['height'] == 0 or size['width'] == 0:
                 continue
+
+            # From http://stackoverflow.com/questions/27775759/send-keys-control-click-selenium
+            ActionChains(self.driver) \
+                .key_down(Keys.COMMAND) \
+                .click(el) \
+                .key_up(Keys.COMMAND) \
+                .perform()
+
+            a_els = el.find_elements_by_tag_name('a')
+            if len(a_els) > 0:
+                link_url = a_els[0].get_attribute('href')
+
+                print 'Found url', link_url
+
+                if link_url is not None:
+                    r = requests.get(link_url)
+                    print r.content
+                else:
+                    print 'URL not found for', el
 
             im = Image.open(filepath)
 
