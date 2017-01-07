@@ -58,6 +58,8 @@ class Crawler:
         # Find ads
         els = self.driver.find_elements_by_class_name('ad')
 
+        main_window = self.driver.current_window_handle
+
         for idx, el in enumerate(els):
             print 'Processing element', idx
 
@@ -79,24 +81,46 @@ class Crawler:
             if size['height'] == 0 or size['width'] == 0:
                 continue
 
+            # Switch to main window
+            self.driver.switch_to_window(main_window)
+
             # From http://stackoverflow.com/questions/27775759/send-keys-control-click-selenium
+            # Cmd + Click to get to the new tab
             ActionChains(self.driver) \
                 .key_down(Keys.COMMAND) \
                 .click(el) \
                 .key_up(Keys.COMMAND) \
                 .perform()
 
-            a_els = el.find_elements_by_tag_name('a')
-            if len(a_els) > 0:
-                link_url = a_els[0].get_attribute('href')
+            if len(self.driver.window_handles) > 1:
+                # Switch to new tab, get url, and close it so we go back to the main window
+                self.driver.switch_to_window(self.driver.window_handles[1])
 
-                print 'Found url', link_url
+                time.sleep(2)
 
-                if link_url is not None:
-                    r = requests.get(link_url)
-                    print r.content
-                else:
-                    print 'URL not found for', el
+                print 'Current URL', self.driver.current_url
+
+                self.driver.close()
+            else:
+                print 'Unable to switch to new tab'
+
+            self.driver.switch_to_window(main_window)
+
+            # self.driver.find_element_by_tag_name('body').send_keys(Keys.CONTROL + Keys.TAB)
+
+            # self.driver.find_element_by_tag_name('body').send_keys(Keys.CONTROL + 'w')
+
+            # a_els = el.find_elements_by_tag_name('a')
+            # if len(a_els) > 0:
+            #     link_url = a_els[0].get_attribute('href')
+
+            #     print 'Found url', link_url
+
+            #     if link_url is not None:
+            #         r = requests.get(link_url)
+            #         print r.content
+            #     else:
+            #         print 'URL not found for', el
 
             im = Image.open(filepath)
 
@@ -113,8 +137,6 @@ class Crawler:
             im.save(filepath.replace('.jpg', '-2.jpg'))
 
             img_ids.append(img_id)
-
-            # pdb.set_trace()
 
         self.driver.quit()
 
