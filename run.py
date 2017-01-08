@@ -11,8 +11,6 @@ from oauth2client.client import GoogleCredentials
 
 from PIL import Image
 
-import requests
-
 import time
 import uuid
 import io
@@ -25,7 +23,7 @@ from conf import urls
 import pdb
 
 PAGE_LOAD_TIMEOUT_SECONDS = 30
-SLEEP_SECONDS = 5
+SLEEP_SECONDS = 15
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 800
 
@@ -46,9 +44,7 @@ class Crawler:
             discoveryServiceUrl=DISCOVERY_URL)
 
     def crawl(self):
-        img_ids = []
-
-        time.sleep(SLEEP_SECONDS)
+        ads = []
 
         # Test with one for now
         self.driver.get(urls[0])
@@ -92,35 +88,21 @@ class Crawler:
                 .key_up(Keys.COMMAND) \
                 .perform()
 
+            curr_url = None
             if len(self.driver.window_handles) > 1:
                 # Switch to new tab, get url, and close it so we go back to the main window
                 self.driver.switch_to_window(self.driver.window_handles[1])
 
                 time.sleep(2)
 
-                print 'Current URL', self.driver.current_url
+                curr_url = self.driver.current_url
+                print 'Current URL', curr_url
 
                 self.driver.close()
             else:
                 print 'Unable to switch to new tab'
 
             self.driver.switch_to_window(main_window)
-
-            # self.driver.find_element_by_tag_name('body').send_keys(Keys.CONTROL + Keys.TAB)
-
-            # self.driver.find_element_by_tag_name('body').send_keys(Keys.CONTROL + 'w')
-
-            # a_els = el.find_elements_by_tag_name('a')
-            # if len(a_els) > 0:
-            #     link_url = a_els[0].get_attribute('href')
-
-            #     print 'Found url', link_url
-
-            #     if link_url is not None:
-            #         r = requests.get(link_url)
-            #         print r.content
-            #     else:
-            #         print 'URL not found for', el
 
             im = Image.open(filepath)
 
@@ -133,76 +115,89 @@ class Crawler:
             print 'Size', size
             print 'Location', location
 
-            im = im.crop((left, top, right, bottom))
-            im.save(filepath.replace('.jpg', '-2.jpg'))
+            filepath_ad = filepath.replace('.jpg', '-ad.jpg')
 
-            img_ids.append(img_id)
+            im = im.crop((left, top, right, bottom))
+            im.save(filepath_ad)
+
+            ads.append({
+                'img_id': img_id,
+                'orig': filepath,
+                'ad': filepath_ad,
+                'curr_url': curr_url,
+                })
 
         self.driver.quit()
 
-        return img_ids
+        return ads
 
-    # From https://github.com/GoogleCloudPlatform/cloud-vision/blob/master/python/text/textindex.py
-    def detect_text(self, input_filenames, num_retries=3, max_results=6):
-        images = {}
-        for filename in input_filenames:
-            with open(filename, 'rb') as image_file:
-                images[filename] = image_file.read()
+    # # From https://github.com/GoogleCloudPlatform/cloud-vision/blob/master/python/text/textindex.py
+    # def detect_text(self, ads, num_retries=3, max_results=6):
+    #     input_filenames = [os.path.join(OUT_DIR, 'screenshot-' + ad['img_id'] + '-2.jpg') for ad in ads]
 
-        batch_request = []
-        for filename in images:
-            batch_request.append({
-                'image': {
-                    'content': base64.b64encode(
-                            images[filename]).decode('UTF-8')
-                },
-                'features': [{
-                    'type': 'TEXT_DETECTION',
-                    'maxResults': max_results,
-                }]
-            })
-        request = self.service.images().annotate(
-            body={'requests': batch_request})
+    #     images = {}
+    #     for filename in input_filenames:
+    #         with open(filename, 'rb') as image_file:
+    #             images[filename] = image_file.read()
 
-        try:
-            responses = request.execute(num_retries=num_retries)
-            if 'responses' not in responses:
-                return {}
-            text_response = {}
-            for filename, response in zip(images, responses['responses']):
-                if 'error' in response:
-                    print("API Error for %s: %s" % (
-                            filename,
-                            response['error']['message']
-                            if 'message' in response['error']
-                            else ''))
-                    continue
-                if 'textAnnotations' in response:
-                    textAnnotations = response['textAnnotations']
-                else:
-                    textAnnotations = []
-                text_response[filename] = textAnnotations
-                with open(filename + '.txt', 'w') as f:
-                    f.write(json.dumps(textAnnotations, indent=2))
-            return text_response
-        except errors.HttpError as e:
-            print("Http Error for %s: %s" % (filename, e))
-        except KeyError as e2:
-            print("Key error: %s" % e2)
+    #     batch_request = []
+    #     for filename in images:
+    #         batch_request.append({
+    #             'image': {
+    #                 'content': base64.b64encode(
+    #                         images[filename]).decode('UTF-8')
+    #             },
+    #             'features': [{
+    #                 'type': 'TEXT_DETECTION',
+    #                 'maxResults': max_results,
+    #             }]
+    #         })
+    #     request = self.service.images().annotate(
+    #         body={'requests': batch_request})
 
-    def identify_company(self, input_filenames):
-        annotation_info = {}
-        for filename in input_filenames:
-            with open(filename, 'r') as f:
-                annotation_info[filename] = json.loads(f.read())
+    #     try:
+    #         responses = request.execute(num_retries=num_retries)
+    #         if 'responses' not in responses:
+    #             return {}
+    #         text_response = {}
+    #         for filename, response in zip(images, responses['responses']):
+    #             if 'error' in response:
+    #                 print("API Error for %s: %s" % (
+    #                         filename,
+    #                         response['error']['message']
+    #                         if 'message' in response['error']
+    #                         else ''))
+    #                 continue
+    #             if 'textAnnotations' in response:
+    #                 textAnnotations = response['textAnnotations']
+    #             else:
+    #                 textAnnotations = []
+    #             text_response[filename] = textAnnotations
+    #             with open(filename + '.txt', 'w') as f:
+    #                 f.write(json.dumps(textAnnotations, indent=2))
+    #         return text_response
+    #     except errors.HttpError as e:
+    #         print("Http Error for %s: %s" % (filename, e))
+    #     except KeyError as e2:
+    #         print("Key error: %s" % e2)
 
-        for filename in input_filenames:
-            text = annotation_info[filename][0]['description']
+    #     return ads
 
-            # TODO: actually figure out how to go from text to company name
+    # def identify_company(self, input_filenames):
+    #     annotation_info = {}
+    #     for filename in input_filenames:
+    #         with open(filename, 'r') as f:
+    #             annotation_info[filename] = json.loads(f.read())
+
+    #     for filename in input_filenames:
+    #         text = annotation_info[filename][0]['description']
+
+    #         # TODO: actually figure out how to go from text to company name
 
 
 if __name__ == '__main__':
     c = Crawler()
-    img_ids = c.crawl()
-    print c.detect_text([os.path.join(OUT_DIR, 'screenshot-' + img_id + '-2.jpg') for img_id in img_ids])
+    ads = c.crawl()
+
+    # Don't need this now since we're just using the landing page URLs
+    # ads = c.detect_text(ads)
