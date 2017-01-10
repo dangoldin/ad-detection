@@ -6,6 +6,7 @@ from selenium.webdriver.common.keys import Keys
 
 from PIL import Image
 
+import requests
 import logging
 import time
 import uuid
@@ -13,6 +14,7 @@ import io
 import os
 import base64
 import json
+import re
 
 from conf import urls
 
@@ -23,6 +25,8 @@ SLEEP_SECONDS = 15
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 800
 
+RE_TWITTER = re.compile('twitter\.com\/(.+?)"')
+
 OUT_DIR = 'out'
 
 logging.basicConfig(level=logging.DEBUG)
@@ -32,6 +36,17 @@ class Crawler:
         self.driver = webdriver.Chrome()
         self.driver.set_page_load_timeout(PAGE_LOAD_TIMEOUT_SECONDS)
         self.driver.set_window_size(WINDOW_WIDTH, WINDOW_HEIGHT)
+
+    def find_twitter_account(self, url):
+        if url is not None:
+            try:
+                r = requests.get(url)
+                twitter_accounts = RE_TWITTER.findall(r.content)
+                if len(twitter_accounts) > 0:
+                    return twitter_accounts[0]
+            except Exception as e:
+                logging.exception('Failed to fetch {0}'.format(url))
+        return None
 
     def crawl(self):
         ads = []
@@ -46,13 +61,17 @@ class Crawler:
 
         main_window = self.driver.current_window_handle
 
+        run_id = str(uuid.uuid4())
+
+        os.mkdir(os.path.join(OUT_DIR, run_id))
+
         for idx, el in enumerate(els):
             logging.info('Processing element: {0}'.format(idx))
 
-            img_id = str(uuid.uuid4())
+            img_id = str(idx)
 
             filename = 'screenshot-' + img_id + '.jpg'
-            filepath = os.path.join(OUT_DIR, filename)
+            filepath = os.path.join(OUT_DIR, run_id, filename)
 
             # From http://stackoverflow.com/questions/15018372/how-to-take-partial-screenshot-with-selenium-webdriver-in-python
             # and http://stackoverflow.com/questions/37882208/get-element-location-relative-to-viewport-with-selenium-python
@@ -64,7 +83,9 @@ class Crawler:
             location = el.location
             size = el.size
 
+            # No valid ad found so clean up
             if size['height'] == 0 or size['width'] == 0:
+                os.remove(filepath)
                 continue
 
             # Switch to main window
@@ -115,9 +136,13 @@ class Crawler:
                 'orig': filepath,
                 'ad': filepath_ad,
                 'curr_url': curr_url,
+                'twitter_account': self.find_twitter_account(curr_url),
                 })
 
         self.driver.quit()
+
+        with open(os.path.join(OUT_DIR, run_id, 'out.json'), 'w') as f:
+            f.write(json.dumps(ads, indent=2))
 
         return ads
 
