@@ -149,6 +149,3 @@ class Crawler:
 if __name__ == '__main__':
     c = Crawler()
     ads = c.crawl()
-
-    # Don't need this now since we're just using the landing page URLs
-    # ads = c.detect_text(ads)
