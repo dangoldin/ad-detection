@@ -15,6 +15,7 @@ import os
 import base64
 import json
 import re
+import sys
 
 from conf import urls
 
@@ -27,12 +28,11 @@ WINDOW_HEIGHT = 800
 
 RE_TWITTER = re.compile('twitter\.com\/(.+?)"')
 
-OUT_DIR = 'out'
-
 logging.basicConfig(level=logging.DEBUG)
 
 class Crawler:
-    def __init__(self):
+    def __init__(self, out_dir):
+        self.out_dir = out_dir
         self.driver = webdriver.Chrome()
         self.driver.set_page_load_timeout(PAGE_LOAD_TIMEOUT_SECONDS)
         self.driver.set_window_size(WINDOW_WIDTH, WINDOW_HEIGHT)
@@ -63,7 +63,7 @@ class Crawler:
 
         run_id = str(uuid.uuid4())
 
-        os.mkdir(os.path.join(OUT_DIR, run_id))
+        os.mkdir(os.path.join(self.out_dir, run_id))
 
         for idx, el in enumerate(els):
             logging.info('Processing element: {0}'.format(idx))
@@ -71,7 +71,7 @@ class Crawler:
             img_id = str(idx)
 
             filename = 'screenshot-' + img_id + '.jpg'
-            filepath = os.path.join(OUT_DIR, run_id, filename)
+            filepath = os.path.join(self.out_dir, run_id, filename)
 
             # From http://stackoverflow.com/questions/15018372/how-to-take-partial-screenshot-with-selenium-webdriver-in-python
             # and http://stackoverflow.com/questions/37882208/get-element-location-relative-to-viewport-with-selenium-python
@@ -104,6 +104,7 @@ class Crawler:
                 # Switch to new tab, get url, and close it so we go back to the main window
                 self.driver.switch_to_window(self.driver.window_handles[1])
 
+                # Wait just in case, might be redirects or just slow
                 time.sleep(2)
 
                 curr_url = self.driver.current_url
@@ -141,11 +142,15 @@ class Crawler:
 
         self.driver.quit()
 
-        with open(os.path.join(OUT_DIR, run_id, 'out.json'), 'w') as f:
+        with open(os.path.join(self.out_dir, run_id, 'out.json'), 'w') as f:
             f.write(json.dumps(ads, indent=2))
 
         return ads
 
 if __name__ == '__main__':
-    c = Crawler()
+    out_dir = 'out'
+    if len(sys.argv) > 1:
+        out_dir = sys.argv[1]
+
+    c = Crawler(out_dir)
     ads = c.crawl()
