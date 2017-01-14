@@ -17,14 +17,9 @@ import json
 import re
 import sys
 
-from conf import urls
+import conf
 
 import pdb
-
-PAGE_LOAD_TIMEOUT_SECONDS = 30
-SLEEP_SECONDS = 15
-WINDOW_WIDTH = 1280
-WINDOW_HEIGHT = 800
 
 RE_TWITTER = re.compile('twitter\.com\/(.+?)"')
 
@@ -34,8 +29,8 @@ class Crawler:
     def __init__(self, out_dir):
         self.out_dir = out_dir
         self.driver = webdriver.Chrome()
-        self.driver.set_page_load_timeout(PAGE_LOAD_TIMEOUT_SECONDS)
-        self.driver.set_window_size(WINDOW_WIDTH, WINDOW_HEIGHT)
+        self.driver.set_page_load_timeout(conf.PAGE_LOAD_TIMEOUT_SECONDS)
+        self.driver.set_window_size(conf.WINDOW_WIDTH, conf.WINDOW_HEIGHT)
 
     def find_twitter_account(self, url):
         if url is not None:
@@ -52,12 +47,13 @@ class Crawler:
         ads = []
 
         # Test with one for now
-        self.driver.get(urls[0])
+        url = conf.urls[0]
+        self.driver.get(url[0])
 
-        time.sleep(SLEEP_SECONDS)
+        time.sleep(conf.SLEEP_SECONDS)
 
         # Find ads
-        els = self.driver.find_elements_by_class_name('ad')
+        els = self.driver.find_elements_by_class_name(url[1])
 
         main_window = self.driver.current_window_handle
 
@@ -105,7 +101,7 @@ class Crawler:
                 self.driver.switch_to_window(self.driver.window_handles[1])
 
                 # Wait just in case, might be redirects or just slow
-                time.sleep(2)
+                time.sleep(conf.SLEEP_SECONDS/5)
 
                 curr_url = self.driver.current_url
                 logging.info('Current URL {0}'.format(curr_url))
