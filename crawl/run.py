@@ -6,17 +6,11 @@ from selenium.webdriver.common.keys import Keys
 
 from PIL import Image
 
-import requests
 import logging
-import time
-import uuid
-import io
-import os
-import base64
-import json
-import re
-import sys
+import time, uuid, base64, json
+import io, re, sys, os
 
+import requests
 import conf
 
 import pdb
@@ -29,6 +23,7 @@ class Crawler:
     def __init__(self, out_dir):
         self.out_dir = out_dir
         self.driver = webdriver.Chrome()
+        # self.driver = webdriver.PhantomJS()
         self.driver.set_page_load_timeout(conf.PAGE_LOAD_TIMEOUT_SECONDS)
         self.driver.set_window_size(conf.WINDOW_WIDTH, conf.WINDOW_HEIGHT)
 
@@ -141,7 +136,7 @@ class Crawler:
         with open(os.path.join(self.out_dir, run_id, 'out.json'), 'w') as f:
             f.write(json.dumps(ads, indent=2))
 
-        return ads
+        return run_id, ads
 
 if __name__ == '__main__':
     out_dir = 'out'
@@ -149,4 +144,4 @@ if __name__ == '__main__':
         out_dir = sys.argv[1]
 
     c = Crawler(out_dir)
-    ads = c.crawl()
+    c.crawl()
