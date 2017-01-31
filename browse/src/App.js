@@ -1,18 +1,45 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
+import React from 'react';
 import './App.css';
+import axios from 'axios';
 
-class App extends Component {
+class App extends React.Component {
+  constructor(props) {
+    super(props)
+
+    this.state = {
+      ads: []
+    }
+  }
+
+  componentDidMount() {
+    const jsonAdsPath = 'http://localhost:8000/out.json'
+    axios.get(jsonAdsPath)
+      .then(res => {
+        const ads = res.data
+        this.setState({ ads });
+      });
+  }
+
   render() {
+    const AdsHTML = this.state.ads.map(function(ad, idx) {
+      var adUrl = 'http://localhost:8000/' + ad.orig.split('/').slice(-1)[0]
+
+      return (
+        <div key={idx}>
+          <span>{ad.twitter_account}</span>
+          <img src={adUrl} width="400px"></img>
+        </div>
+      )
+    })
+
     return (
       <div className="App">
         <div className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h2>Welcome to React</h2>
+          <h2>Welcome to Ad Detector</h2>
         </div>
-        <p className="App-intro">
-          To get started, edit <code>src/App.js</code> and save to reload.
-        </p>
+        <div className="App-intro">
+          {AdsHTML}
+        </div>
       </div>
     );
   }
