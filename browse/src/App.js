@@ -2,6 +2,21 @@ import React from 'react';
 import './App.css';
 import axios from 'axios';
 
+class Ad extends React.Component {
+  render() {
+    return (
+      <li className="ad">
+        <div className="twitter-account">
+          {this.props.twitterAccount}
+        </div>
+        <div className="image">
+          <img src={this.props.adUrl} />
+        </div>
+      </li>
+    )
+  }
+}
+
 class App extends React.Component {
   constructor(props) {
     super(props)
@@ -21,14 +36,15 @@ class App extends React.Component {
   }
 
   render() {
-    const AdsHTML = this.state.ads.map(function(ad, idx) {
+    const Ads = this.state.ads.map(function(ad, idx) {
       var adUrl = 'http://localhost:8000/' + ad.orig.split('/').slice(-1)[0]
+      var twitterAccount = (ad.twitter_account || '').split('/')[0];
 
       return (
-        <div key={idx}>
-          <span>{ad.twitter_account}</span>
-          <img src={adUrl} width="400px"></img>
-        </div>
+        <Ad key={idx}
+          twitterAccount={twitterAccount}
+          adUrl={adUrl}
+          />
       )
     })
 
@@ -38,7 +54,9 @@ class App extends React.Component {
           <h2>Welcome to Ad Detector</h2>
         </div>
         <div className="App-intro">
-          {AdsHTML}
+          <ul className="ads">
+            {Ads}
+          </ul>
         </div>
       </div>
     );

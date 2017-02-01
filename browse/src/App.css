@@ -22,3 +22,25 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+ul.ads {
+  list-style: none;
+}
+
+ul.ads > li.ad {
+  width: 1000px;
+}
+
+ul.ads > li.ad > div.twitter-account {
+  width: 300px;
+  display: inline-block;
+}
+
+ul.ads > li.ad > div.image {
+  width: 700px;
+  display: inline-block;
+}
+
+ul.ads > li.ad > div.image > img {
+  width: 700px;
+}
