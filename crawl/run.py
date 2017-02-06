@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+"""Script that identifies ads, the respective advertisers, and uploads this data to S3"""
+
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
@@ -14,6 +16,8 @@ import requests
 import conf
 
 import pdb
+
+import boto3
 
 RE_TWITTER = re.compile('twitter\.com\/(.+?)"')
 
@@ -42,7 +46,7 @@ class Crawler:
         ads = []
 
         # Test with one for now
-        url = conf.urls[0]
+        url = conf.URLS[0]
         self.driver.get(url[0])
 
         time.sleep(conf.SLEEP_SECONDS)
@@ -138,10 +142,20 @@ class Crawler:
 
         return run_id, ads
 
+    def upload_to_s3(self, run_id, ads):
+        s3 = boto3.resource('s3')
+
+        for ad in ads:
+            filepath = ad['orig']
+            filename = run_id + '-' + filepath.split('/')[-1]
+            data = open(filepath, 'rb')
+            s3.Bucket(conf.S3_BUCKET).put_object(Key=filename, Body=data)
+
 if __name__ == '__main__':
     out_dir = 'out'
     if len(sys.argv) > 1:
         out_dir = sys.argv[1]
 
     c = Crawler(out_dir)
-    c.crawl()
+    run_id, ads = c.crawl()
+    c.upload_to_s3(run_id, ads)
