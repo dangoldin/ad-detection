@@ -36,7 +36,7 @@ class Crawler:
             try:
                 r = requests.get(url)
                 twitter_accounts = RE_TWITTER.findall(r.content)
-                if len(twitter_accounts) > 0:
+                if len(twitter_accounts) > 0 and '?' not in twitter_accounts[0]:
                     return twitter_accounts[0]
             except Exception as e:
                 logging.exception('Failed to fetch {0}'.format(url))
@@ -145,11 +145,23 @@ class Crawler:
     def upload_to_s3(self, run_id, ads):
         s3 = boto3.resource('s3')
 
+        out = {'ads': []}
         for ad in ads:
             filepath = ad['orig']
             filename = run_id + '-' + filepath.split('/')[-1]
             data = open(filepath, 'rb')
-            s3.Bucket(conf.S3_BUCKET).put_object(Key=filename, Body=data)
+            s3.Bucket(conf.S3_BUCKET).put_object(
+                Key=filename,
+                Body=data,
+                ContentType='image/jpeg')
+            out['ads'].append({
+                'filename': filename,
+                'ad_info': ad
+            })
+        s3.Bucket(conf.S3_BUCKET).put_object(
+            Key='out.json',
+            Body=json.dumps(out),
+            ContentType='application/json; charset=utf-8')
 
 if __name__ == '__main__':
     out_dir = 'out'

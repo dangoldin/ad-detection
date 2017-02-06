@@ -27,18 +27,20 @@ class App extends React.Component {
   }
 
   componentDidMount() {
-    const jsonAdsPath = 'http://localhost:8000/out.json'
+    // const jsonAdsPath = 'http://localhost:8000/out.json'
+    const jsonAdsPath = 'http://sleeping-giants.s3-website-us-east-1.amazonaws.com/out.json'
     axios.get(jsonAdsPath)
       .then(res => {
-        const ads = res.data
+        const ads = res.data.ads
         this.setState({ ads });
       });
   }
 
   render() {
+    const baseURL = 'http://sleeping-giants.s3-website-us-east-1.amazonaws.com/'
     const Ads = this.state.ads.map(function(ad, idx) {
-      var adUrl = 'http://localhost:8000/' + ad.orig.split('/').slice(-1)[0]
-      var twitterAccount = (ad.twitter_account || '').split('/')[0];
+      var adUrl = baseURL + ad.filename
+      var twitterAccount = (ad.ad_info.twitter_account || '').split('/')[0];
 
       return (
         <Ad key={idx}
