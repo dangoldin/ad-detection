@@ -2,28 +2,33 @@
 
 """Script that identifies ads, the respective advertisers, and uploads this data to S3"""
 
+import re
+import sys
+import os
+import time
+import uuid
+import json
+import logging
+
+import requests
+import conf
+
+# import pdb
+
+import boto3
+
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 
 from PIL import Image
+from saver import Saver
 
-import logging
-import time, uuid, base64, json
-import io, re, sys, os
+RE_TWITTER = re.compile(r'twitter\.com\/(.+?)"')
 
-import requests
-import conf
+logging.basicConfig(level=logging.INFO)
 
-import pdb
-
-import boto3
-
-RE_TWITTER = re.compile('twitter\.com\/(.+?)"')
-
-logging.basicConfig(level=logging.DEBUG)
-
-class Crawler:
+class Crawler(object):
     def __init__(self, out_dir):
         self.out_dir = out_dir
         self.driver = webdriver.Chrome()
@@ -164,10 +169,16 @@ class Crawler:
             ContentType='application/json; charset=utf-8')
 
 if __name__ == '__main__':
-    out_dir = 'out'
+    OUT_DIR = 'out'
     if len(sys.argv) > 1:
-        out_dir = sys.argv[1]
+        OUT_DIR = sys.argv[1]
 
-    c = Crawler(out_dir)
-    run_id, ads = c.crawl()
-    c.upload_to_s3(run_id, ads)
+    CRAWLER = Crawler(OUT_DIR)
+    RUN_ID, ADS = CRAWLER.crawl()
+    CRAWLER.upload_to_s3(RUN_ID, ADS)
+
+    SAVER = Saver(cred_file='client_secret.json')
+    SAVER.open_workbook('Sleeping Giants Data')
+
+    for ad in ADS:
+        SAVER.insert_row([ad['orig'], ad['ad'], ad['twitter_account'], ad['curr_url']])
