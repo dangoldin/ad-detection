@@ -153,7 +153,7 @@ class Crawler(object):
         out = {'ads': []}
         for ad in ads:
             filepath = ad['orig']
-            filename = run_id + '-' + filepath.split('/')[-1]
+            filename = 'ads/' + run_id + '-' + filepath.split('/')[-1]
             data = open(filepath, 'rb')
             s3.Bucket(conf.S3_BUCKET).put_object(
                 Key=filename,
@@ -164,7 +164,7 @@ class Crawler(object):
                 'ad_info': ad
             })
         s3.Bucket(conf.S3_BUCKET).put_object(
-            Key='out.json',
+            Key=run_id + 'out.json',
             Body=json.dumps(out),
             ContentType='application/json; charset=utf-8')
 
