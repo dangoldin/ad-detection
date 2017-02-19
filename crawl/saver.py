@@ -3,18 +3,26 @@
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-# use creds to create a client to interact with the Google Drive API
-scope = ['https://spreadsheets.google.com/feeds']
-creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
-client = gspread.authorize(creds)
+class Saver:
+	def __init__(self, cred_file='client_secret.json'):
+		scope = ['https://spreadsheets.google.com/feeds']
+		creds = ServiceAccountCredentials.from_json_keyfile_name(cred_file, scope)
+		self.client = gspread.authorize(creds)
 
-# Find a workbook by name and open the first sheet
-# Make sure you use the right name here.
-sheet = client.open("Sleeping Giants Data").sheet1
+	def open_workbook(self, workbook_name):
+		self.sheet = self.client.open(workbook_name).sheet1
 
-# Extract and print all of the values
-list_of_hashes = sheet.get_all_records()
-print(list_of_hashes)
-print(sheet.row_count)
+	def get_rows(self):
+		return self.sheet.get_all_records()
 
-sheet.insert_row(['G', 'H', 'I'], len(list_of_hashes)+2)
+	def num_rows(self):
+		return len(self.sheet.get_all_records())
+
+	def insert_row(self, vals):
+		self.sheet.insert_row(vals, self.num_rows() + 2)
+
+if __name__ == '__main__':
+	SAVER = Saver(cred_file='client_secret.json')
+	SAVER.open_workbook('Sleeping Giants Data')
+	print SAVER.num_rows()
+	SAVER.insert_row(['C', 'B', 'A'])
