@@ -31,6 +31,9 @@ logging.basicConfig(level=logging.INFO)
 class Crawler(object):
     def __init__(self, out_dir):
         self.out_dir = out_dir
+        self.driver = None
+
+    def start_driver(self):
         self.driver = webdriver.Chrome()
         # self.driver = webdriver.PhantomJS()
         self.driver.set_page_load_timeout(conf.PAGE_LOAD_TIMEOUT_SECONDS)
@@ -48,6 +51,9 @@ class Crawler(object):
         return None
 
     def crawl(self):
+        if not self.driver:
+            self.start_driver()
+
         ads = []
 
         # Test with one for now
@@ -153,23 +159,39 @@ class Crawler(object):
         out = {'ads': []}
         for ad in ads:
             filepath = ad['orig']
-            filename = 'ads/' + run_id + '-' + filepath.split('/')[-1]
             data = open(filepath, 'rb')
             s3.Bucket(conf.S3_BUCKET).put_object(
-                Key=filename,
+                Key=filepath,
                 Body=data,
                 ContentType='image/jpeg')
+
+            filepath_ad = ad['ad']
+            data_ad = open(filepath_ad, 'rb')
+            s3.Bucket(conf.S3_BUCKET).put_object(
+                Key=filepath_ad,
+                Body=data_ad,
+                ContentType='image/jpeg')
+
             out['ads'].append({
-                'filename': filename,
+                'filename': filepath,
                 'ad_info': ad
             })
         s3.Bucket(conf.S3_BUCKET).put_object(
-            Key=run_id + 'out.json',
+            Key=self.out_dir + '/' + run_id + '.json',
+            Body=json.dumps(out),
+            ContentType='application/json; charset=utf-8')
+
+    def generate_json(self, rows):
+        s3 = boto3.resource('s3')
+
+        out = {'ads': [dict(r) for r in SAVER.get_rows()]}
+        s3.Bucket(conf.S3_BUCKET).put_object(
+            Key='out.json',
             Body=json.dumps(out),
             ContentType='application/json; charset=utf-8')
 
 if __name__ == '__main__':
-    OUT_DIR = 'out'
+    OUT_DIR = 'ads'
     if len(sys.argv) > 1:
         OUT_DIR = sys.argv[1]
 
@@ -180,5 +202,7 @@ if __name__ == '__main__':
     SAVER = Saver(cred_file='client_secret.json')
     SAVER.open_workbook('Sleeping Giants Data')
 
-    for ad in ADS:
-        SAVER.insert_row([ad['orig'], ad['ad'], ad['twitter_account'], ad['curr_url']])
+    for AD in ADS:
+        SAVER.insert_row([AD['orig'], AD['ad'], AD['twitter_account'], AD['curr_url']])
+
+    CRAWLER.generate_json(SAVER.get_rows())
