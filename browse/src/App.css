@@ -9,7 +9,7 @@
 
 .App-header {
   background-color: #222;
-  height: 150px;
+  height: 50px;
   padding: 20px;
   color: white;
 }
@@ -28,7 +28,8 @@ ul.ads {
 }
 
 ul.ads > li.ad {
-  width: 1000px;
+  width: 1200px;
+  border-bottom: 1px dashed #555;
 }
 
 ul.ads > li.ad > div.twitter-account {
@@ -36,11 +37,15 @@ ul.ads > li.ad > div.twitter-account {
   display: inline-block;
 }
 
-ul.ads > li.ad > div.image {
-  width: 700px;
+ul.ads > li.ad > div.images {
+  width: 800px;
   display: inline-block;
 }
 
-ul.ads > li.ad > div.image > img {
-  width: 700px;
+.page-screenshot {
+  width: 400px;
+}
+
+.ad-screenshot {
+  width: 400px;
 }
