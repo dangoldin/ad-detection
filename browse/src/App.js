@@ -28,7 +28,7 @@ class App extends React.Component {
 
     this.state = {
       ads: [],
-      twitterAccountOnly: false
+      twitterAccountOnly: true
     }
 
     this.toggleTwitterAccountsOnly = this.toggleTwitterAccountsOnly.bind(this)
