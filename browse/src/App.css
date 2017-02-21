@@ -1,10 +1,6 @@
 .App {
   text-align: center;
-}
-
-.App-logo {
-  animation: App-logo-spin infinite 20s linear;
-  height: 80px;
+  width: 100%;
 }
 
 .App-header {
@@ -14,38 +10,40 @@
   color: white;
 }
 
-.App-intro {
-  font-size: large;
-}
-
 @keyframes App-logo-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 
-ul.ads {
-  list-style: none;
+table {
+  border-collapse: collapse;
+  width: 100%;
 }
 
-ul.ads > li.ad {
-  width: 1200px;
-  border-bottom: 1px dashed #555;
+table thead tr {
+  background-color: #fff;
 }
 
-ul.ads > li.ad > div.twitter-account {
-  width: 300px;
-  display: inline-block;
+table thead th {
+  font-size: 20px;
+  color: #111;
+  padding: 6px;
 }
 
-ul.ads > li.ad > div.images {
-  width: 800px;
-  display: inline-block;
+table tr, table td {
+  border: none;
+  padding: 5px;
+  text-align: left;
 }
 
-.page-screenshot {
-  width: 400px;
+table tr:nth-child(odd){
+  background-color: #dedede;
 }
 
 .ad-screenshot {
-  width: 400px;
+  width: 300px;
 }
+
+/*.page-screenshot {
+  width: 400px;
+}*/

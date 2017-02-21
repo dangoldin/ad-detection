@@ -4,16 +4,20 @@ import axios from 'axios';
 
 class Ad extends React.Component {
   render() {
+    const TwitterURL = this.props.twitterAccount !== 'None' ? <a href={'https://twitter.com/' + this.props.twitterAccount} target="_blank">@{this.props.twitterAccount}</a> : '';
+
     return (
-      <li className="ad">
-        <div className="twitter-account">
-          {this.props.twitterAccount}
-        </div>
-        <div className="images">
+      <tr className="ad">
+        <td className="twitter-account">
+          {TwitterURL}
+        </td>
+        <td>
           <img className="ad-screenshot" src={this.props.adScreenshotURL} alt="ad-screenshot" />
+        </td>
+        <td>
           <img className="page-screenshot" src={this.props.pageScreenshotURL} alt="page-screenshot" />
-        </div>
-      </li>
+        </td>
+      </tr>
     )
   }
 }
@@ -24,7 +28,7 @@ class App extends React.Component {
 
     this.state = {
       ads: [],
-      twitterAccountOnly: true
+      twitterAccountOnly: false
     }
 
     this.toggleTwitterAccountsOnly = this.toggleTwitterAccountsOnly.bind(this)
@@ -79,9 +83,18 @@ class App extends React.Component {
           </form>
         </div>
         <div className="App-intro">
-          <ul className="ads">
-            {Ads}
-          </ul>
+          <table className="ads">
+            <thead>
+              <tr>
+                <th>Twitter</th>
+                <th>Ad Image</th>
+                <th>Page Image</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Ads}
+            </tbody>
+          </table>
         </div>
       </div>
     );
