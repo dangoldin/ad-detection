@@ -28,22 +28,29 @@ table thead th {
   font-size: 20px;
   color: #111;
   padding: 6px;
+  border-top: #222 solid 2px;
+  border-bottom: #222 solid 2px;
+}
+
+table tbody {
+  border-bottom: #222 solid 2px;
 }
 
 table tr, table td {
   border: none;
   padding: 5px;
-  text-align: left;
+  border-right: #444 dashed 1px;
+  text-align: center;
 }
 
 table tr:nth-child(odd){
-  background-color: #dedede;
+  background-color: #eee;
 }
 
 .ad-screenshot {
   width: 300px;
 }
 
-/*.page-screenshot {
-  width: 400px;
-}*/
+.page-screenshot {
+  width: 800px;
+}
