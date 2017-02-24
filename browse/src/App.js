@@ -70,8 +70,8 @@ class App extends React.Component {
     })
 
     return (
-      <div className="App">
-        <div className="App-header">
+      <div className="app">
+        <div className="header">
           <h2>Ad detector</h2>
         </div>
         <div>
@@ -82,7 +82,7 @@ class App extends React.Component {
               onChange={this.toggleTwitterAccountsOnly}/>
           </form>
         </div>
-        <div className="App-intro">
+        <div className="intro">
           <table className="ads">
             <thead>
               <tr>
