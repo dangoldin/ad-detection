@@ -72,7 +72,7 @@ class App extends React.Component {
     return (
       <div className="app">
         <div className="header">
-          <h2>Ad detector</h2>
+          <h2>Ad Detector</h2>
         </div>
         <div>
           <form>

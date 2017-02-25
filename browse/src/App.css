@@ -6,15 +6,12 @@
 }
 
 .header {
-  /*background-color: #222;*/
-  padding: 6px;
   color: #111;
 }
 
 .header h2 {
-
   font-weight: 300;
-  font-size: 2.5em;
+  font-size: 2em;
 }
 
 table {
@@ -55,4 +52,8 @@ table tr:nth-child(odd){
 
 .page-screenshot {
   width: 800px;
+}
+
+form {
+  padding: 8px;
 }
