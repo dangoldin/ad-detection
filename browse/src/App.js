@@ -4,7 +4,7 @@ import axios from 'axios';
 
 class Ad extends React.Component {
   render() {
-    const TwitterURL = this.props.twitterAccount !== 'None' ? <a href={'https://twitter.com/' + this.props.twitterAccount} target="_blank">@{this.props.twitterAccount}</a> : '';
+    const TwitterURL = this.props.twitterAccount !== 'None' ? <a href={'https://twitter.com/' + this.props.twitterAccount} target="_blank">@{this.props.twitterAccount}</a> : ''
 
     return (
       <tr className="ad">
@@ -28,10 +28,12 @@ class App extends React.Component {
 
     this.state = {
       ads: [],
-      twitterAccountOnly: true
+      twitterAccountOnly: true,
+      sort: null
     }
 
     this.toggleTwitterAccountsOnly = this.toggleTwitterAccountsOnly.bind(this)
+    this.toggleSort = this.toggleSort.bind(this)
   }
 
   toggleTwitterAccountsOnly(e) {
@@ -43,20 +45,44 @@ class App extends React.Component {
     axios.get(jsonAdsPath)
       .then(res => {
         const ads = res.data.ads
-        this.setState({ ads: ads });
-      });
+        this.setState({ ads: ads })
+      })
+  }
+
+  toggleSort() {
+    if (this.state.sort === null) {
+      this.setState({ sort: 'asc' })
+    } else {
+      this.setState({ sort: this.state.sort === 'asc' ? 'desc' : 'asc' })
+    }
+  }
+
+  compareText(a, b) {
+    a = a || ''
+    b = b || ''
+    a = a.toLowerCase()
+    b = b.toLowerCase()
+    if (a < b) return -1
+    if (a > b) return 1
+    return 0
   }
 
   render() {
+    const that = this
+
     const baseURL = 'http://sleeping-giants.s3-website-us-east-1.amazonaws.com/'
 
     const filteredAds = this.state.twitterAccountOnly ?
-      this.state.ads.filter((ad) => ad.Twitter_Account !== 'None' ) : this.state.ads;
+      this.state.ads.filter((ad) => ad.Twitter_Account !== 'None' ) : this.state.ads
 
-    const Ads = filteredAds.map(function(ad, idx) {
+    const sortedAds = this.state.sort === null ? filteredAds :
+      this.state.sort === 'desc' ? filteredAds.sort((a, b) => that.compareText(a.Twitter_Account, b.Twitter_Account)) :
+        filteredAds.sort((a, b) => that.compareText(b.Twitter_Account, a.Twitter_Account))
+
+    const Ads = sortedAds.map(function(ad, idx) {
       const adScreenshot = baseURL + ad.Ad_Screenshot
       const pageScreenshot = baseURL + ad.Page_Screenshot
-      const twitterAccount = (ad.Twitter_Account || '').split('/')[0];
+      const twitterAccount = (ad.Twitter_Account || '').split('/')[0]
       const adURL = ad.URL
 
       return (
@@ -68,6 +94,11 @@ class App extends React.Component {
           />
       )
     })
+
+    var sortArrow = ''
+    if (this.state.sort !== null) {
+      sortArrow = this.state.sort === 'asc' ? '▼' : '▲'
+    }
 
     return (
       <div className="app">
@@ -86,7 +117,7 @@ class App extends React.Component {
           <table className="ads">
             <thead>
               <tr>
-                <th>Twitter</th>
+                <th onClick={this.toggleSort}>Twitter {sortArrow}</th>
                 <th>Ad Image</th>
                 <th>Page Image</th>
               </tr>
@@ -97,7 +128,7 @@ class App extends React.Component {
           </table>
         </div>
       </div>
-    );
+    )
   }
 }
 
