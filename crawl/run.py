@@ -34,10 +34,16 @@ class Crawler(object):
         self.driver = None
 
     def start_driver(self):
-        self.driver = webdriver.Chrome()
+        options = webdriver.ChromeOptions()
+        options.add_argument('headless')
+        options.add_argument('window-size=1,1')
+        options.binary_location = '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary'
+
+        self.driver = webdriver.Chrome(chrome_options=options)
         # self.driver = webdriver.PhantomJS()
         self.driver.set_page_load_timeout(conf.PAGE_LOAD_TIMEOUT_SECONDS)
-        self.driver.set_window_size(conf.WINDOW_WIDTH, conf.WINDOW_HEIGHT)
+        # The below is buggy in headless chrome
+        # self.driver.set_window_size(conf.WINDOW_WIDTH, conf.WINDOW_HEIGHT)
 
     def find_twitter_account(self, url):
         if url is not None:
